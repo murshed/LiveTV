@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Borishal IPTV</title>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
+
+body{
+background:#000;
+color:white;
+overflow-x:hidden;
+}
+
+/* HEADER */
+
+.header{
+background:#000;
+padding:6px;
+text-align:center;
+border-top:1px solid red;
+border-bottom:1px solid red;
+}
+
+.header h1{
+font-size:30px;
+color:#ff1a1a;
+text-shadow:0 0 15px red;
+}
+
+/* PLAYER */
+
+.player-box{
+position:relative;
+width:100%;
+max-width:1920px;
+margin:0 auto;
+background:black;
+}
+
+video{
+width:100%;
+aspect-ratio:16/9;
+max-height:min(70vh, 540px);
+background:black;
+object-fit:fill;
+}
+
+@media(min-width:1920px){
+video{
+max-height:min(60vh, 540px);
+}
+}
+
+@media(min-width:2560px){
+video{
+max-height:min(55vh, 640px);
+}
+}
+
+@media(min-width:3840px){
+video{
+max-height:min(50vh, 720px);
+}
+}
+
+/* CONTROLS */
+
+.custom-controls{
+
+position:absolute;
+top:50%;
+left:50%;
+
+transform:translate(-50%,-50%);
+
+display:flex;
+gap:15px;
+
+z-index:999;
+transition:.4s;
+
+}
+
+.control-btn{
+
+width:58px;
+height:58px;
+
+border:none;
+border-radius:50%;
+
+background:red;
+color:white;
+
+font-size:22px;
+
+display:flex;
+justify-content:center;
+align-items:center;
+
+cursor:pointer;
+
+box-shadow:
+0 0 15px rgba(255,0,0,.6);
+
+}
+
+/* SEARCH */
+
+.search-box{
+padding:2px;
+}
+
+.search-box input{
+
+width:100%;
+padding:8px;
+
+font-size:14px;
+
+border:none;
+outline:none;
+
+border-radius:12px;
+
+background:#111;
+color:white;
+
+}
+
+/* CHANNEL GRID */
+
+.channel-grid{
+
+display:grid;
+grid-template-columns:repeat(5,1fr);
+
+gap:12px;
+padding:12px;
+
+}
+
+@media(max-width:1024px){
+.channel-grid{
+grid-template-columns:repeat(4,1fr);
+}
+}
+
+@media(max-width:768px){
+.channel-grid{
+grid-template-columns:repeat(3,1fr);
+gap:8px;
+padding:8px;
+}
+}
+
+@media(max-width:480px){
+.channel-grid{
+grid-template-columns:repeat(2,1fr);
+gap:6px;
+padding:6px;
+}
+}
+
+/* CHANNEL */
+
+.channel{
+
+background:white;
+
+border-radius:20px;
+
+padding:4px;
+
+height:75px;
+
+display:flex;
+justify-content:center;
+align-items:center;
+
+cursor:pointer;
+
+border:2px solid #00cfff;
+
+box-shadow:
+0 0 12px rgba(0,207,255,.5);
+
+transition:.3s;
+
+}
+
+.channel:hover{
+transform:scale(1.03);
+}
+
+.channel img{
+
+width:75%;
+height:75%;
+object-fit:contain;
+background:transparent;
+
+}
+
+/* ACTIVE */
+
+.active{
+
+border:3px solid #00ff84 !important;
+
+box-shadow:
+0 0 18px #00ff84,
+0 0 28px rgba(0,255,132,.8);
+
+}
+
+/* LIVE COUNTER */
+
+.live-counter{
+
+position:fixed;
+
+left:15px;
+bottom:95px;
+
+z-index:99999;
+
+background:rgba(0,0,0,.80);
+
+padding:12px 16px;
+
+border-radius:18px;
+
+font-size:16px;
+font-weight:bold;
+
+color:white;
+
+backdrop-filter:blur(10px);
+
+box-shadow:
+0 0 14px rgba(0,255,100,.5);
+
+opacity:1;
+
+transition:.4s;
+
+}
+
+/* NAV ARROWS */
+
+.nav-arrows{
+position:absolute;
+top:50%;
+left:0;
+right:0;
+transform:translateY(-50%);
+display:flex;
+justify-content:space-between;
+pointer-events:none;
+z-index:998;
+padding:0 8px;
+}
+
+.nav-btn{
+pointer-events:auto;
+width:44px;
+height:64px;
+border:none;
+background:rgba(255,0,0,0.7);
+color:white;
+font-size:24px;
+font-weight:bold;
+cursor:pointer;
+border-radius:8px;
+transition:.3s;
+display:flex;
+align-items:center;
+justify-content:center;
+backdrop-filter:blur(4px);
+opacity:0;
+transition:opacity .4s, background .3s;
+}
+
+.player-box:hover .nav-btn,
+.player-box:active .nav-btn{
+opacity:1;
+}
+
+.nav-btn:hover{
+background:rgba(255,0,0,1);
+}
+
+@media(max-width:768px){
+.nav-btn{
+opacity:1;
+width:40px;
+height:54px;
+font-size:20px;
+background:rgba(255,0,0,0.6);
+}
+}
+
+@media(max-width:480px){
+.nav-btn{
+width:36px;
+height:50px;
+font-size:18px;
+}
+}
+
+/* CONTACT */
+
+.contact-title{
+
+text-align:center;
+
+font-size:16px;
+font-weight:bold;
+
+margin-top:0px;
+margin-bottom:0px;
+
+color:white;
+
+text-shadow:
+0 0 10px red;
+
+}
+
+.social-box{
+
+display:flex;
+justify-content:center;
+gap:10px;
+
+padding-bottom:0px;
+
+}
+
+.social-box a{
+
+width:35px;
+height:35px;
+
+border-radius:50%;
+
+display:flex;
+justify-content:center;
+align-items:center;
+
+font-size:20px;
+
+text-decoration:none;
+color:white;
+
+}
+
+.telegram{
+background:#229ED9;
+}
+
+.facebook{
+background:#1877F2;
+}
+
+/* FOOTER */
+
+.footer{
+
+text-align:center;
+
+padding:2px;
+
+font-size:12px;
+font-weight:bold;
+
+border-top:2px solid red;
+
+}
+
+.footer span{
+color:red;
+}
+.player-box{
+position:sticky;
+top:0;
+z-index:9999;
+background:black;
+}
+
+.search-box{
+position:sticky;
+top:0;
+z-index:9998;
+background:black;
+}
+
+.channel-grid{
+overflow-y:auto;
+padding-bottom:20px;
+}
+
+@media(min-width:1920px){
+.channel-grid{
+grid-template-columns:repeat(6,1fr);
+}
+}
+
+@media(min-width:2560px){
+.channel-grid{
+grid-template-columns:repeat(7,1fr);
+gap:16px;
+padding:16px;
+}
+.channel{
+height:90px;
+border-radius:24px;
+}
+.channel img{
+width:80%;
+height:80%;
+}
+}
+
+@media(min-width:3840px){
+.channel-grid{
+grid-template-columns:repeat(9,1fr);
+gap:20px;
+padding:20px;
+}
+.channel{
+height:110px;
+border-radius:28px;
+}
+.channel img{
+width:85%;
+height:85%;
+}
+}
+
+@media(max-width:768px){
+.control-btn{
+width:48px;
+height:48px;
+font-size:18px;
+}
+.header h1{
+font-size:22px;
+}
+.live-counter{
+font-size:13px;
+padding:8px 12px;
+bottom:80px;
+left:10px;
+}
+}
+
+@media(max-width:480px){
+.channel{
+height:60px;
+border-radius:14px;
+}
+.channel img{
+width:70%;
+height:70%;
+}
+.control-btn{
+width:42px;
+height:42px;
+font-size:16px;
+}
+.custom-controls{
+gap:10px;
+}
+.header h1{
+font-size:18px;
+}
+.live-counter{
+font-size:12px;
+padding:6px 10px;
+bottom:70px;
+left:8px;
+}
+.contact-title{
+font-size:14px;
+}
+.social-box a{
+width:30px;
+height:30px;
+font-size:16px;
+}
+}
+</style>
+
+</head>
+
+<body>
+
+<!-- HEADER -->
+
+<div class="header">
+
+<h1>Borishal IPTV</h1>
+
+</div>
+
+<!-- LIVE COUNTER -->
+
+<div class="live-counter">
+
+🟢 Live Users :
+<span id="liveUsers">0</span>
+
+<br>
+
+👁 Total Views :
+<span id="totalViews">0</span>
+
+</div>
+
+<!-- PLAYER -->
+
+<div class="player-box">
+
+<video id="video"
+autoplay
+playsinline
+controls>
+
+</video>
+
+<!-- CONTROLS -->
+
+<div class="custom-controls">
+
+<button class="control-btn"
+onclick="prevChannel()">
+
+⏮
+
+</button>
+
+<button class="control-btn"
+onclick="togglePlay()">
+
+⏯
+
+</button>
+
+<button class="control-btn"
+onclick="nextChannel()">
+
+⏭
+
+</button>
+
+</div>
+
+<div class="nav-arrows">
+<button class="nav-btn up-btn" onclick="prevChannel()">▲</button>
+<button class="nav-btn down-btn" onclick="nextChannel()">▼</button>
+</div>
+
+</div>
+
+<!-- SEARCH -->
+
+<div class="search-box">
+
+<input type="text"
+
+id="search"
+
+placeholder="Search Channel..."
+
+onkeyup="searchChannels()">
+
+</div>
+
+<!-- CHANNELS -->
+
+<div class="channel-grid"
+id="channelGrid">
+
+</div>
+
+<!-- CONTACT -->
+
+<h2 class="contact-title">
+
+আমার টিভি সম্পর্কে মতামত জানাতে
+
+</h2>
+
+<div class="social-box">
+
+<a href="#"target="_blank"class="telegram">
+
+<i class="fab fa-telegram-plane"></i>
+
+</a>
+
+<a href="#" target="_blank"class="facebook">
+
+<i class="fab fa-facebook-f"></i>
+
+</a>
+
+</div>
+
+<!-- FOOTER -->
+
+<div class="footer">
+
+© 2026 <span>Borishal IPTV</span>
+
+</div>
+
+<script>
+
+/* PLAYLIST */
+
+const playlist =
+'https://raw.githubusercontent.com/Rakib49/Rakibiptv/refs/heads/main/aynaott.m3u';
+
+let channels = [];
+let currentIndex = 0;
+
+/* LOAD PLAYLIST */
+
+fetch(playlist)
+
+.then(r=>r.text())
+
+.then(data=>{
+
+const lines =
+data.split('\n');
+
+for(let i=0;i<lines.length;i++){
+
+if(lines[i].startsWith('#EXTINF')){
+
+const info = lines[i];
+const url = lines[i+1];
+const name = info.split(',')[1];
+
+let logo='';
+
+const match =
+info.match(/tvg-logo="(.*?)"/);
+
+if(match){
+logo=match[1];
+}
+
+channels.push({
+name,
+url,
+logo
+});
+
+}
+
+}
+
+renderChannels();
+
+if(channels.length>0){
+playChannel(0);
+}
+
+});
+
+/* RENDER */
+
+function renderChannels(){
+
+const grid =
+document.getElementById('channelGrid');
+
+grid.innerHTML='';
+
+channels.forEach((ch,index)=>{
+
+const div =
+document.createElement('div');
+
+div.className='channel';
+
+if(ch.logo){
+const img=document.createElement('img');
+img.src=ch.logo;
+img.onerror=function(){
+div.textContent=ch.name.charAt(0);
+div.style.cssText='font-size:24px;font-weight:bold;color:#333;';
+};
+div.appendChild(img);
+}else{
+div.textContent=ch.name.charAt(0);
+div.style.cssText='font-size:24px;font-weight:bold;color:#333;';
+}
+
+div.onclick=()=>playChannel(index);
+
+grid.appendChild(div);
+
+});
+
+}
+
+/* PLAY */
+
+function playChannel(index){
+
+currentIndex=index;
+
+const video =
+document.getElementById('video');
+
+const channel =
+channels[index];
+
+if(Hls.isSupported()){
+
+const hls =
+new Hls();
+
+hls.loadSource(channel.url);
+
+hls.attachMedia(video);
+
+hls.on(
+Hls.Events.MANIFEST_PARSED,
+function(){
+
+video.play();
+
+});
+
+}
+
+else{
+
+video.src=channel.url;
+video.play();
+
+}
+
+document.querySelectorAll('.channel')
+.forEach(el=>{
+
+el.classList.remove('active');
+
+});
+
+document.querySelectorAll('.channel')[index]
+.classList.add('active');
+
+}
+
+/* NEXT */
+
+function nextChannel(){
+
+currentIndex++;
+
+if(currentIndex>=channels.length){
+
+currentIndex=0;
+
+}
+
+playChannel(currentIndex);
+
+}
+
+/* PREV */
+
+function prevChannel(){
+
+currentIndex--;
+
+if(currentIndex<0){
+
+currentIndex=
+channels.length-1;
+
+}
+
+playChannel(currentIndex);
+
+}
+
+/* PLAY PAUSE */
+
+function togglePlay(){
+
+const video =
+document.getElementById('video');
+
+if(video.paused){
+
+video.play();
+
+}
+
+else{
+
+video.pause();
+
+}
+
+}
+
+/* SEARCH */
+
+function searchChannels(){
+
+const input =
+document.getElementById('search')
+.value.toLowerCase();
+
+const cards =
+document.querySelectorAll('.channel');
+
+channels.forEach((ch,index)=>{
+
+if(ch.name.toLowerCase()
+.includes(input)){
+
+cards[index]
+.style.display='flex';
+
+}
+
+else{
+
+cards[index]
+.style.display='none';
+
+}
+
+});
+
+}
+
+/* AUTO HIDE */
+
+const controls =
+document.querySelector('.custom-controls');
+
+const visitor =
+document.querySelector('.live-counter');
+
+function showUI(){
+
+controls.style.opacity='1';
+visitor.style.opacity='1';
+
+setTimeout(()=>{
+
+controls.style.opacity='0';
+visitor.style.opacity='0';
+
+},5000);
+
+}
+
+showUI();
+
+document.querySelector('.player-box')
+.addEventListener('click',()=>{
+
+showUI();
+
+});
+
+document.addEventListener('keydown',(e)=>{
+if(e.key==='ArrowUp'){
+e.preventDefault();
+prevChannel();
+}else if(e.key==='ArrowDown'){
+e.preventDefault();
+nextChannel();
+}
+});
+
+</script>
+
+
+
+</body>
+</html>
